@@ -47,11 +47,11 @@ Dz = Differential(z)
 Dt = Differential(t)
 
 # Define constants
-v = 10.0 #Velocity [m / s]
+v = 9.0 #Velocity [m / s]
 c_p = FluidSpecificHeat
 
 α_inner = FluidThermalConductivity / InnerRadius
-α_outer = RockThermalConductivity / (OuterRadius - InnerRadius)
+α_outer = RockThermalConductivity / (OuterRadius)
 
 u_inner = 2π * InnerRadius
 u_outer = 2π * OuterRadius
