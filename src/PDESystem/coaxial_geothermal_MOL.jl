@@ -35,7 +35,7 @@ end
 const PumpSpeed = InnerVolume / 5.0 # [m3/s]
 const PumpTime = InnerVolume / PumpSpeed # [s]
 
-# Let the drilling begin!
+# Let the drilling begin! - With MethodOfLines.jl
 ############################################################################################
 # 1D domain: z
 ############################################################################################
@@ -58,6 +58,8 @@ u_outer = 2π * OuterRadius
 
 A_inner = InnerArea
 A_outer = OuterArea - A_inner
+
+# See PDF for equations - note that the advection term signs are inverted
 
 eqs = [A_inner * c_p * Dt(Tinner(t, z)) + v * Dz(Tinner(t, z)) ~ -u_inner * α_inner * (Tinner(t, z) - Touter(t, z)),
     A_outer * c_p * Dt(Touter(t, z)) - v * Dz(Touter(t, z)) ~ u_inner * α_inner * (Tinner(t, z) - Touter(t, z)) +
