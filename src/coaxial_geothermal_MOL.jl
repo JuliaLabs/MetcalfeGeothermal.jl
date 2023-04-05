@@ -35,7 +35,10 @@ end
 const PumpSpeed = InnerVolume / 5.0 # [m3/s]
 const PumpTime = InnerVolume / PumpSpeed # [s]
 
-# Let the drilling begin
+# Let the drilling begin!
+############################################################################################
+# 1D domain: z
+############################################################################################
 
 @parameters t z
 @variables Tinner(..), Touter(..)
