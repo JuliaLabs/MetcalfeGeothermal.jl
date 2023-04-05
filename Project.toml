@@ -1,0 +1,4 @@
+name = "MetcalfeGeothermal"
+uuid = "d178e5ed-affd-4f17-ab72-b61884852ee4"
+authors = ["Bob Metcalfe <Bob.Metcalfe@UTexas.edu> and contributors"]
+version = "0.1.0"
