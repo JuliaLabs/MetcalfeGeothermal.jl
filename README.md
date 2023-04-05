@@ -1,2 +1,2 @@
 # MetcalfeGeothermal
-Toy Model of Coaxial Geothermal
+Coaxial Geothermal Vision of Bob Metcalfe
