@@ -4,3 +4,5 @@ Pkg.activate("..")
 
 using MetcalfeGeothermal
 @show MetcalfeGeothermal.PipeString
+
+MetcalfeGeothermal.printPipeString("----------- stop -----------")
