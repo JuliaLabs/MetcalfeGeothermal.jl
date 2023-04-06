@@ -1,5 +1,5 @@
 module MetcalfeGeothermal
-
+using Plots
 println("Toy Model of Coaxial Geothermal - Bob.Metcalfe@UTexas.edu TexasGEO.org")
 # ---------- Earth
 const earth = (EarthSurfaceTemperature = 15.0, EarthTemperatureGradient = 0.025) # [C], [C/m]
@@ -43,7 +43,7 @@ const PumpSpeed = InnerVolume/5.0 # [m3/s]
 const PumpTime = InnerVolume/PumpSpeed # [s]
 # ---------- Operation
 for run in 1:100 # iteration on thermo updates
-    
+
     for ip in 1:NumberOfPipes
         pipe = PipeString[ip]
         # outer pipe to inner pipe Joule flux
@@ -52,16 +52,16 @@ for run in 1:100 # iteration on thermo updates
         O2Ia = InnerArea
         O2Im = InnerVolume * FluidDensity
         O2Ipt = PumpTime
-        
+
         O2Ijf = O2Ic * O2Idt * O2Ia * O2Im * O2Ipt
         # print("O2I ",run, O2Ijf,O2Ic,O2Idt,O2Ia,O2Im,O2Ipt)
-        # ambient to outer Joule flux 
+        # ambient to outer Joule flux
         A2Oc = RockThermalConductivity
         A2Odt = AmbientTemperature(earth, (ip-1)*LengthOfPipe) - pipe.outertemp
         A2Oa = OuterArea
         A2Om = OuterVolume * FluidDensity
         A2Opt = PumpTime
-        
+
         A2Ojf = A2Oc * A2Odt * A2Oa * A2Om * A2Opt
         # print("A2O ",run,A2Ojf,A2Oc,A2Odt,A2Oa,A2Om,A2Opt)
         # Update temperatures
@@ -91,4 +91,6 @@ PipeString[1].outertemp = savedinnerpipe
 PipeString[NumberOfPipes].innertemp = savedouterpipe
 printPipeString("----------- stop -----------")
 
+plot([pipe.innertemp for pipe in PipeString], label="inner")
+plot!([pipe.outertemp for pipe in PipeString], label="outer")
 end # module MetcalfeGeothermal
