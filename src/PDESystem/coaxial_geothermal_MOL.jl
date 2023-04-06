@@ -67,8 +67,8 @@ u_inner = 2π * InnerRadius
 u_outer = 2π * OuterRadius
 
 # ! These are far too small, we need to find another way to get the correct values
-α_inner = FluidThermalConductivity
-α_outer = RockThermalConductivity
+α_inner = FluidThermalConductivity/InnerRadius
+α_outer = RockThermalConductivity/OuterRadius
 
 A_inner = π * InnerRadius^2 # cross sectional area of inner pipe
 A_outer = π * (OuterRadius^2 - InnerRadius^2) # cross sectional area of outer pipe
