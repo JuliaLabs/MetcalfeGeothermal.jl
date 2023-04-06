@@ -32,13 +32,17 @@ if round(InnerVolume, digits=4) != round(OuterVolume, digits=4)
     println("Inner and outer volumnes are not equal.")
 end
 
-const PumpSpeed = InnerVolume / 5.0 # [m3/s]
+const PumpSpeed = InnerVolume /5 # [m3/s]
 const PumpTime = InnerVolume / PumpSpeed # [s]
+const WaterSpeed = LengthOfPipe/PumpTime # [m/s]
 
 # Let the drilling begin! - With MethodOfLines.jl
 ############################################################################################
 # 1D domain: z
 ############################################################################################
+
+println("Water speed ", WaterSpeed, " meters per second.")
+
 
 @parameters t z
 @variables Tinner(..), Touter(..)
@@ -55,29 +59,31 @@ Dz = Differential(z)
 Dt = Differential(t)
 
 # Define constants
-v = 9.0 #[m / s]
+V = WaterSpeed #[m / s]
 c_p = FluidSpecificHeat
 
-α_inner = FluidThermalConductivity
-α_outer = RockThermalConductivity
 
 u_inner = 2π * InnerRadius
 u_outer = 2π * OuterRadius
 
-A_inner = InnerArea
-A_outer = OuterArea - A_inner
+α_inner = FluidThermalConductivity
+α_outer = RockThermalConductivity
+
+A_inner = π * InnerRadius^2 # cross sectional area of inner pipe
+A_outer = π * (OuterRadius^2 - InnerRadius^2) # cross sectional area of outer pipe
 
 tmax = 3000.0
 
-eqs = [A_inner * c_p * Dt(Tinner(t, z)) + v * Dz(Tinner(t, z)) ~ -u_inner * α_inner * (Tinner(t, z) - Touter(t, z)),
-    A_outer * c_p * Dt(Touter(t, z)) - v * Dz(Touter(t, z)) ~ u_inner * α_inner * (Tinner(t, z) - Touter(t, z)) +
+# Structure defined in the PDF, note that the advection signs are flipped
+eqs = [A_inner * c_p * Dt(Tinner(t, z)) - V * Dz(Tinner(t, z)) ~ -u_inner * α_inner * (Tinner(t, z) - Touter(t, z)),
+    A_outer * c_p * Dt(Touter(t, z)) + V * Dz(Touter(t, z)) ~ u_inner * α_inner * (Tinner(t, z) - Touter(t, z)) +
                                                               u_outer * α_outer * (AmbientTemperature(earth, z) - Touter(t, z)),
 ]
 
 bcs = [Tinner(0, z) ~ AmbientTemperature(earth, z),
     Touter(0, z) ~ AmbientTemperature(earth, z),
-    Tinner(t, 0) ~ AmbientTemperature(earth, 0),
-    Touter(t, DepthOfWell) ~ Tinner(t, DepthOfWell),
+    Touter(t, 0) ~ AmbientTemperature(earth, 0),
+    Tinner(t, DepthOfWell) ~ Touter(t, DepthOfWell),
 ]
 
 domains = [z in Interval(0.0, DepthOfWell),
@@ -106,4 +112,4 @@ println("At t = $tmax, the inner pipe temperature at ground level is ", sol_Tinn
 
 # Plot the solution
 p = plot(solz, [sol_Tinner[end, 1:end], sol_Touter[end, 1:end]], label=["Tinner" "Touter"], xlabel="z", ylabel="T", title="Temperature vs. Depth")
-savefig(p, "metcalfe_geothermal.png")
+savefig(p, "src/PDESystem/metcalfe_geothermal.png")
