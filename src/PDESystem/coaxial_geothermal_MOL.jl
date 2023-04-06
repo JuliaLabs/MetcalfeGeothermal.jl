@@ -75,7 +75,7 @@ A_outer = π * (OuterRadius^2 - InnerRadius^2) # cross sectional area of outer p
 
 tmax = 3000.0
 
-# Structure defined in the PDF, note that the advection signs are flipped
+# Structure defined in the PDF
 eqs = [A_inner * ρ * c_p * Dt(Tinner(t, z)) - V * Dz(Tinner(t, z)) ~ -u_inner * α_inner * (Tinner(t, z) - Touter(t, z)),
     A_outer * ρ * c_p * Dt(Touter(t, z)) + V * Dz(Touter(t, z)) ~ u_inner * α_inner * (Tinner(t, z) - Touter(t, z)) +
                                                               u_outer * α_outer * (AmbientTemperature(earth, z) - Touter(t, z)),
