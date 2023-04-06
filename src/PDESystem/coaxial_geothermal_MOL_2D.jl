@@ -1,6 +1,6 @@
 using ModelingToolkit, MethodOfLines, OrdinaryDiffEq, DomainSets, Plots
 
-println("1D PDE Depth Model of Coaxial Geothermal - Bob.Metcalfe@UTexas.edu TexasGEO.org")
+println("1D PDE Model of Coaxial Geothermal - Bob.Metcalfe@UTexas.edu TexasGEO.org")
 # ---------- Earth
 const earth = (EarthSurfaceTemperature=15.0, EarthTemperatureGradient=0.025) # [C], [C/m]
 # Ambient temperature in Celsius at depth in meters
@@ -35,60 +35,45 @@ end
 const PumpSpeed = InnerVolume / 5.0 # [m3/s]
 const PumpTime = InnerVolume / PumpSpeed # [s]
 
-# Let the drilling begin! - With MethodOfLines.jl
 ############################################################################################
-# 1D domain: z
+# cylindrical domain **WIP**
 ############################################################################################
 
-@parameters t z
-@variables Tinner(..), Touter(..)
+## Now try to do the same thing with radial gradients and a cylindrical domain
+@parameters z r t
+@variables T(..)
 
-Dz = Differential(z)
 Dt = Differential(t)
-
-# Let the drilling begin
-
-@parameters t z
-@variables Tinner(..), Touter(..)
-
 Dz = Differential(z)
-Dt = Differential(t)
+Dr = Differential(r)
+Drr = Differential(r)^2
 
-# Define constants
-v = 9.0 #[m / s]
-c_p = FluidSpecificHeat
+# r dependent velocity
+v(x) = ifelse(x < InnerRadius, PumpSpeed, -PumpSpeed)
 
-α_inner = FluidThermalConductivity
-α_outer = RockThermalConductivity
+# ? TODO: Define constants
 
-u_inner = 2π * InnerRadius
-u_outer = 2π * OuterRadius
+# Single equation this time
+eqs = [K * Dt(T(t, z, r)) + v(r) * Dz(T(t, z, r)) ~ u_inner * α_inner * 1 / r^2 * Dr(r^2 * Dr(T(t, z, r)))]
 
-A_inner = InnerArea
-A_outer = OuterArea - A_inner
-
-tmax = 3000.0
-
-eqs = [A_inner * c_p * Dt(Tinner(t, z)) + v * Dz(Tinner(t, z)) ~ -u_inner * α_inner * (Tinner(t, z) - Touter(t, z)),
-    A_outer * c_p * Dt(Touter(t, z)) - v * Dz(Touter(t, z)) ~ u_inner * α_inner * (Tinner(t, z) - Touter(t, z)) +
-                                                              u_outer * α_outer * (AmbientTemperature(earth, z) - Touter(t, z)),
-]
-
-bcs = [Tinner(0, z) ~ AmbientTemperature(earth, z),
-    Touter(0, z) ~ AmbientTemperature(earth, z),
-    Tinner(t, 0) ~ AmbientTemperature(earth, 0),
-    Touter(t, DepthOfWell) ~ Tinner(t, DepthOfWell),
+bcs = [T(0, z, r) ~ AmbientTemperature(earth, z),
+    T(0, z, r) ~ AmbientTemperature(earth, z),
+    T(t, z, 0) ~ 6 * Drr(T(u, z, r)), # from the paper https://web.mit.edu/braatzgroup/analysis_of_finite_difference_discretization_schemes_for_diffusion_in_spheres_with_variable_diffusivity.pdf
+    T(t, z, OuterRadius) ~ AmbientTemperature(earth, z),
+    T(t, 0, r) ~ AmbientTemperature(earth, 0),
+    Touter(t, DepthOfWell, r) ~ Tinner(t, DepthOfWell, r),
 ]
 
 domains = [z in Interval(0.0, DepthOfWell),
-    t in Interval(0.0, tmax),
+    r in Interval(0.0, OuterRadius),
+    t in Interval(0.0, 100.0),
 ]
 
-@named pde = PDESystem(eqs, bcs, domains, [t, z], [Tinner(t, z), Touter(t, z)])
+@named pde = PDESystem(eqs, bcs, domains, [t, z, r], [T(t, z, r)])
 
 # Create the discretization
 
-disc = MOLFiniteDifference([z => 100], t)
+disc = MOLFiniteDifference([z => 32, r => 16], t)
 
 # Generate the ODE problem
 prob = discretize(pde, disc)
@@ -96,14 +81,8 @@ prob = discretize(pde, disc)
 # Solve the ODE problem
 sol = solve(prob, QBDF(), saveat=10.0)
 
-sol_Tinner = sol[Tinner(t, z)]
-sol_Touter = sol[Touter(t, z)]
+sol_Tinner = sol[Tinner(t, z, r)]
+sol_Touter = sol[Touter(t, z, r)]
 
 solt = sol[t]
 solz = sol[z]
-
-println("At t = $tmax, the inner pipe temperature at ground level is ", sol_Tinner[end, 1], " and the outer pipe temperature is ", sol_Touter[end, 1], ".")
-
-# Plot the solution
-p = plot(solz, [sol_Tinner[end, 1:end], sol_Touter[end, 1:end]], label=["Tinner" "Touter"], xlabel="z", ylabel="T", title="Temperature vs. Depth")
-savefig(p, "metcalfe_geothermal.png")
