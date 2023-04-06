@@ -61,11 +61,12 @@ Dt = Differential(t)
 # Define constants
 V = WaterSpeed #[m / s]
 c_p = FluidSpecificHeat
-
+ρ = FluidDensity
 
 u_inner = 2π * InnerRadius
 u_outer = 2π * OuterRadius
 
+# ! These are far too small, we need to find another way to get the correct values
 α_inner = FluidThermalConductivity
 α_outer = RockThermalConductivity
 
@@ -75,8 +76,8 @@ A_outer = π * (OuterRadius^2 - InnerRadius^2) # cross sectional area of outer p
 tmax = 3000.0
 
 # Structure defined in the PDF, note that the advection signs are flipped
-eqs = [A_inner * c_p * Dt(Tinner(t, z)) - V * Dz(Tinner(t, z)) ~ -u_inner * α_inner * (Tinner(t, z) - Touter(t, z)),
-    A_outer * c_p * Dt(Touter(t, z)) + V * Dz(Touter(t, z)) ~ u_inner * α_inner * (Tinner(t, z) - Touter(t, z)) +
+eqs = [A_inner * ρ * c_p * Dt(Tinner(t, z)) - V * Dz(Tinner(t, z)) ~ -u_inner * α_inner * (Tinner(t, z) - Touter(t, z)),
+    A_outer * ρ * c_p * Dt(Touter(t, z)) + V * Dz(Touter(t, z)) ~ u_inner * α_inner * (Tinner(t, z) - Touter(t, z)) +
                                                               u_outer * α_outer * (AmbientTemperature(earth, z) - Touter(t, z)),
 ]
 
